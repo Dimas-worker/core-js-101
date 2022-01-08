@@ -20,8 +20,12 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  return {
+    height,
+    width,
+    getArea: () => height * width,
+  };
 }
 
 
@@ -35,8 +39,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,8 +55,9 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const obj = JSON.parse(json);
+  return Object.setPrototypeOf(obj, proto);
 }
 
 
@@ -111,35 +116,88 @@ function fromJSON(/* proto, json */) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    if (this.elem) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    if (this.ID) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    if (this === cssSelectorBuilder) {
+      const obj = { selector: '', __proto__: cssSelectorBuilder, elem: true };
+      obj.selector += `${value}`;
+      return obj;
+    }
+    this.selector += `${value}`;
+    this.elem = true;
+    return this;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    if (this.ID) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    if (this.classes || this.pseudoE) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    if (this === cssSelectorBuilder) {
+      const obj = { selector: '', __proto__: cssSelectorBuilder, ID: true };
+      obj.selector += `#${value}`;
+      return obj;
+    }
+    this.selector += `#${value}`;
+    this.ID = true;
+    return this;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    if (this.att) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    if (this === cssSelectorBuilder) {
+      const obj = { selector: '', __proto__: cssSelectorBuilder, classes: true };
+      obj.selector += `.${value}`;
+      return obj;
+    }
+    this.selector += `.${value}`;
+    this.classes = true;
+    return this;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    if (this.pseudoC) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    if (this === cssSelectorBuilder) {
+      const obj = { selector: '', __proto__: cssSelectorBuilder, att: true };
+      obj.selector += `[${value}]`;
+      return obj;
+    }
+    this.selector += `[${value}]`;
+    this.att = true;
+    return this;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    if (this.pseudoE) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    if (this === cssSelectorBuilder) {
+      const obj = { selector: '', __proto__: cssSelectorBuilder, pseudoC: true };
+      obj.selector += `:${value}`;
+      return obj;
+    }
+    this.selector += `:${value}`;
+    this.pseudoC = true;
+    return this;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    if (this.pseudoE) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    if (this === cssSelectorBuilder) {
+      const obj = { selector: '', __proto__: cssSelectorBuilder, pseudoE: true };
+      obj.selector += `::${value}`;
+      return obj;
+    }
+    this.selector += `::${value}`;
+    this.pseudoE = true;
+    return this;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.selector} ${combinator} ${selector2.selector}`;
+    return this;
+  },
+  stringify() {
+    return this.selector;
   },
 };
-
 
 module.exports = {
   Rectangle,
